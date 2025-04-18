@@ -1,29 +1,60 @@
-# Workflow manager
+
+# Python Workflow manager
+
+## Testing
+
+```bash
+
+source env.sh
+pytest -vvv --capture=tee-sys py_wf/tests/
+
+```
+
+## Workflow manager Design
 
 This is meant to be a light-way pythton script to manage workflows for benchmarking purposes.
 
 - Dynamic execution can be done by creating a sub-dag and executing it in a task.
 
-## Example: Run a simulation on multiple nodes
+## Example: Create a python task dependencies
 
 ```python
 
-nodes=[1,2,3,4]
-runs=[]
-
-for node in nodes:
-
-    script="echo $(hostname) > name-{node}.txt"
-
-    @task.bash(executor=slurm_executor,resources={"nodes":1},script=script )
-    def run(node):
-        return "name-{node}.txt"
+@task
+def greeting_italian():
     
-    runs.append(run(node) )
+    return "Ciao!"
 
-report=collect(runs)
+@task
+def greeting_french():
+    
+    return "Bonjour!"
 
-report()
+@task
+def all_greetings(italian_greeting,french_greeting):
+    return f"{italian_greeting} & {french_greeting}"
+
+
+greet=all_greetings(greeting_italian,greeting_french)
+greet()
 
 ```
+
+## Example : run a bash script and parse the output
+
 ```python
+@bash
+def greet_hostname(greeting):
+    return f"echo {greeting} $(hostname)"
+
+@task
+def say_hello():
+
+    greet_hostname("Ciao")
+
+    print("OK")
+
+task=say_hello()
+task()
+
+```
