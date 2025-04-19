@@ -35,7 +35,12 @@ class Node:
         self.__dependencies=[]
 
         self.addDependencies(dependencies)
-        
+    
+    @property
+    def dependencies(self):
+        """The number of direct dependencies of this node
+        """
+        return self.__dependencies
 
     def addDependencies(self,nodes ):
         """Add a list of nodes as dependnecies
@@ -46,30 +51,64 @@ class Node:
     
 
     def __len__(self):
-        """ Return the namber of nodes in this graph
+        """ Return the number of nodes in this graph.
         """
-        pass 
-    
-    def __call__(self) -> None:
+        i= 0
+        for node in self:
+              i+=1
+        return i
+
+    def runTask(self):
+        self.state=self.task()
+        return self
+
+    def __call__(self) :
         """Run all the tasks in the graph. Dependencies are run before this node is needed.
         """
 
-        self.state=State.DEPENDENCIES
-        pass 
+        # If nothing to do return self
+        if self.state == State.FAILED or self.state == State.COMPLETED:
+            return self
         
-        # for dep in dependencies:
-        #     if dep.state is not None:
-        #         dep()
 
-        # self.state=State.SUBMITTED
-        # self.state=self.task()
-    
+        
+        dependenciesSatisfied=True
+        for dep in self.dependencies:
+            # Run the dependency
+            depState=dep().state
+            # If any of the dependencies have failed , fail this task
+            if depState == State.FAILED:
+                self.state=State.FAILED
+                return self
+            dependenciesSatisfied=dependenciesSatisfied and (depState==State.COMPLETED)
+
+        if dependenciesSatisfied:
+            try: 
+                self.task()
+            except:
+                self.state==State.FAILED
+            else:
+                self.state=State.COMPLETED
+        else:
+            self.state = State.DEPENDENCIES
+        
+        return self
+
+
+    def __repr__(self) -> str:
+        return f"<Node name='{self.name}', state={self.state}>"
+
+    def __iter__(self):
+        return NodeIterator(self)
 
 
 class NodeIterator:
+    """Node Iterator. Uses Breath First Search to iterate overal all the dependencies in a tree.
+    """
 
     def __init__(self,node) -> None:
-        self.__de = deque(node)
+        self.__de = deque()
+        self.__de.append(node)
         self.__visited=set()
 
     def __next__( self ) -> Node :
@@ -81,7 +120,7 @@ class NodeIterator:
 
         self.__visited.add(node.name)
 
-        for dep in self.dependencies:
+        for dep in node.dependencies:
             if dep not in self.__visited:
                 self.__de.append(dep)
 
