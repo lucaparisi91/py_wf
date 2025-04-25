@@ -28,8 +28,8 @@ def test_shel_executor_async():
 
         await monitorTask
 
-
-        outputs= [ task[0].decode("utf-8").strip() for task in all_tasks]
+        
+        outputs= [ task[0] for task in all_tasks]
         
         return outputs
 
@@ -43,3 +43,4 @@ def test_shel_executor_async():
     assert(outputs[0]== "Done1")
     assert(outputs[1]== "Done2")
     assert(outputs[2]== "Done3")
+
