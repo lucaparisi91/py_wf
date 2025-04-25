@@ -6,15 +6,15 @@ import timeit
 from py_wf.executor import ShellExecutor
 from py_wf.monitor import Monitor
 
-def test_async():
+def test_shel_executor_async():
 
     async def run_tasks():
 
-
+        
         exec=ShellExecutor()
         
-        
         bashMonitor=Monitor(exec)
+        
         monitorTask=bashMonitor( )
         tasks = [
             exec("sleep 5;echo Done1"),
@@ -43,4 +43,3 @@ def test_async():
     assert(outputs[0]== "Done1")
     assert(outputs[1]== "Done2")
     assert(outputs[2]== "Done3")
-

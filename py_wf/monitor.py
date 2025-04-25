@@ -32,12 +32,13 @@ class Monitor:
         return asyncio.create_task( self._monitor() )
 
     async def _monitor(self):
-        
+
         while self._enabled:
             if not self._running:
                 print(f"{self.name}> Start monitoring")
                 self._running=True
             print(f"\r{self.name}> Processes: {self.executor._nProcess}/{self.executor.maxProcesses}",end="\r")
             await asyncio.sleep(self.pollingTime)
-        self._running=True        
+        self._running=True
         print(f"\n{self.name}> End monitoring")
+    
