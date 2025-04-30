@@ -22,7 +22,7 @@ class slurm_executor:
                     "SUSPENDED",	
                     "TIMEOUT"
                     ]
-
+        
         self.failed_states=[ "BOOT_FAIL",
                                 "CANCELLED",
                                 "DEADLINE",
@@ -36,8 +36,8 @@ class slurm_executor:
         self.poll_interval=poll_intervall # Time between different poll requests to the servers in seconds 
         self.save_slurm_script=True
 
-
-    def submit(self, task, work_dir : Path = Path(".") ) -> int:
+    
+    def submit(self, script: str, work_dir : Path = Path(".") ) -> int:
         
         work_dir=os.path.abspath(work_dir)
         slurm_options= dict ()
@@ -54,7 +54,7 @@ class slurm_executor:
             slurm_options.update(task.resources)
         
         # Generate a tempory batch script file
-        batch_script=self._generate_batch_script(task.script,slurm_options,work_dir)
+        batch_script=self._generate_batch_script(script,slurm_options,work_dir)
         script_file_name = os.path.join(work_dir, "submit.sh")
         with open( script_file_name,"w+") as f:
             f.write(batch_script)
@@ -86,7 +86,8 @@ class slurm_executor:
     def done( self, job_id: int) -> bool:
 
         return self.get_state(  job_id) in ["COMPLETED","FAILED"]
-
+    
+    
     def wait(self, job_id : int):
         """
         Block until the job is completed
@@ -104,8 +105,7 @@ class slurm_executor:
         
         if work_dir is not None:
             batch_script+=f"cd {work_dir}\n"
-        batch_script+=script
-
+        batch_script+=script        
      
         
         return str(batch_script)

@@ -1,10 +1,7 @@
 from enum import Enum
 from collections import deque
-
-class State(Enum):
-    COMPLETED = 0
-    FAILED = 1
-    DEPENDENCIES = 2
+import asyncio
+from py_wf.task import State
 
 
 class Node:
@@ -24,18 +21,21 @@ class Node:
         """
         
         self.task=task
-        self.state=None
+        self.name=name
 
         if name in Node.__used__names:
             raise ValueError(f"Node names needs to unique. Name {name} has alreaddy been used.")
         else:
             Node.__used__names.add(name)
 
-        self.name=name
         self.__dependencies=[]
 
         self.addDependencies(dependencies)
     
+    @property
+    def state(self) -> State:
+        return self.task.state
+
     @property
     def dependencies(self):
         """The number of direct dependencies of this node
@@ -57,12 +57,15 @@ class Node:
         for node in self:
               i+=1
         return i
+    def __call__(self):
+        asyncio.run( self._run_async() )
+    
+    def __del__(self):
+        if self.name in  Node.__used__names:
+            Node.__used__names.remove(self.name)
 
-    def runTask(self):
-        self.state=self.task()
-        return self
 
-    def __call__(self) :
+    async def _run_async(self) :
         """Run all the tasks in the graph. Dependencies are run before this node is needed.
         """
 
@@ -71,33 +74,18 @@ class Node:
             return self
         
 
-        
-        dependenciesSatisfied=True
-        for dep in self.dependencies:
-            # Run the dependency
-            depState=dep().state
-            # If any of the dependencies have failed , fail this task
-            if depState == State.FAILED:
-                self.state=State.FAILED
-                return self
-            dependenciesSatisfied=dependenciesSatisfied and (depState==State.COMPLETED)
+        results=await asyncio.gather( *[dep._run_async() for dep in self.dependencies] )
+        if any( [result.state != State.COMPLETED for result in results]  ):
+            self.state=State.FAILED
+            return self
 
-        if dependenciesSatisfied:
-            try: 
-                self.task()
-            except:
-                self.state==State.FAILED
-            else:
-                self.state=State.COMPLETED
-        else:
-            self.state = State.DEPENDENCIES
-        
+        await self.task()
+
         return self
-
-
+    
     def __repr__(self) -> str:
-        return f"<Node name='{self.name}', state={self.state}>"
-
+        return f"<Node name='{self.name}' state={self.state} task={self.task}>"
+    
     def __iter__(self):
         return NodeIterator(self)
 
@@ -109,19 +97,18 @@ class NodeIterator:
     def __init__(self,node) -> None:
         self.__de = deque()
         self.__de.append(node)
-        self.__visited=set()
+        self.__visited=set(node.name)
 
     def __next__( self ) -> Node :
         
         if len(self.__de)==0:
             raise StopIteration
 
-        node = self.__de.pop()
-
-        self.__visited.add(node.name)
+        node = self.__de.popleft()        
+        #print(self.__visited)
 
         for dep in node.dependencies:
-            if dep not in self.__visited:
-                self.__de.append(dep)
-
+            if dep.name not in self.__visited:
+                    self.__visited.add(dep.name)
+                    self.__de.append(dep)
         return node

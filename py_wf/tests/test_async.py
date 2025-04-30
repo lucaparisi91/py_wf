@@ -1,12 +1,12 @@
 import asyncio
 import timeit
 
-
-
 from py_wf.executor import ShellExecutor
 from py_wf.monitor import Monitor
+from py_wf.node import Node
+from py_wf.task import Task,State
 
-def test_shel_executor_async():
+def test_shell_executor_async():
 
     async def run_tasks():
 
@@ -14,7 +14,7 @@ def test_shel_executor_async():
         exec=ShellExecutor()
         
         bashMonitor=Monitor(exec)
-        
+
         monitorTask=bashMonitor( )
         tasks = [
             exec("sleep 5;echo Done1"),
@@ -30,6 +30,7 @@ def test_shel_executor_async():
 
         
         outputs= [ task[0] for task in all_tasks]
+
         
         return outputs
 
@@ -43,4 +44,28 @@ def test_shel_executor_async():
     assert(outputs[0]== "Done1")
     assert(outputs[1]== "Done2")
     assert(outputs[2]== "Done3")
+
+def test_shell_executor_node():
+    
+    exec= ShellExecutor()
+    helloTask = Task("echo Hello! ",executor=exec)
+
+    node= Node("hello",task=helloTask)
+
+    node()
+    assert(node.task.output == "Hello!")   
+
+
+def test_shell_executor_node():
+    
+    exec= ShellExecutor()
+    
+    dependencies = [ Node(f"hello{i}" , task=Task(f"echo Hello{1}! ",executor=exec) ) for i in range(10)]
+
+    node1= Node("trigger",task=Task(f"echo Trigger! ",executor=exec),dependencies=dependencies)
+
+    node1()
+
+    assert(node1.task.state == State.COMPLETED)
+
 

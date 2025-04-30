@@ -2,28 +2,28 @@ from pathlib import Path
 import os
 from termcolor import colored
 from enum import Enum
+from py_wf.executor import Executor
 
 class State(Enum):
         COMPLETED = 0
         FAILED = 1
-        DEPENDENCIES = 2
+        SUBMITTED = 2
 
 
 class Task:
     
-    def __init__(self,operator,executor,resources={},work_dir: str = "."):
+    def __init__(self,operator,executor: Executor,resources={},work_dir: str = "."):
         self.operator=operator
         self.executor=executor
         self.resources=resources
         self.executor=executor
         self.work_dir=work_dir
-        self.state=None
-        self.output=None
-        
+        self.state= None
 
-    async def __call__(self):
+    async def __call__(self) :
         
         try:
+            self.state=State.SUBMITTED
             self.output = await self.executor(self.operator)
         except Exception as e:
             print( colored( f"Error in submitting jobs: {str(e)} ","red") )
@@ -32,11 +32,12 @@ class Task:
             self.state=State.COMPLETED
         
         return self
-        
+
         #except Exception as e:
         #    
             
         #print(f"Task {self.name} completed with state " , colored( self.executor.get_state(jobid) , "yellow" ) )
 
     def __repr__(self) -> str:
-        return f"<operator={repr(self.operator)} executor={ repr(self.executor)},resources={repr(self.resources)}>"
+        return f"<Task operator={repr(self.operator)} executor={ repr(self.executor)},resources={repr(self.resources)}>"
+
