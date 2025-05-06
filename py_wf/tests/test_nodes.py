@@ -1,5 +1,5 @@
 from py_wf.node import Node 
-from py_wf.executor import PythonExecutor
+from py_wf.executor.python import PythonExecutor
 from py_wf.task import Task
 
 def test_node():
@@ -68,7 +68,7 @@ def test_dyamond():
         assert node.name == expected_order[i]
     
     node3()
-    
+        
     assert node3.task.output == "Hello 3 !"
     assert node1.task.output == "Hello 1 !"
     assert node2.task.output == "Hello 2 !"

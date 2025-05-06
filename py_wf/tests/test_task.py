@@ -1,6 +1,8 @@
 
 from py_wf.task import Task, State
-from py_wf.executor import ShellExecutor , PythonExecutor
+from py_wf.executor.shell import ShellExecutor
+from py_wf.executor.python import PythonExecutor
+
 import asyncio
 
 def test_run_async():
@@ -32,8 +34,9 @@ def test_python_executor():
         return "Hello"
     
     task = Task( hello, executor=executor )
-
+    
     asyncio.run(task() )
 
     assert(task.output == "Hello" )
+
 

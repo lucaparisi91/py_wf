@@ -1,37 +1,5 @@
-from typing import Any
-from subprocess import check_output, STDOUT
-import asyncio 
-from abc import ABC,abstractmethod
-
-
-class Executor(ABC):
-    """ Abstract base class for all executors
-
-    An executor is a callable. When invoked, possibly with parameters, it is responsponsible to create an asynchroneous tasks that takes cares to submit to a scheduler ( i.e. slurm, current python session, bash etc..) and returns once the task is completed.
-    """
-
-    @abstractmethod
-    def __call__(self, *args,**kwds) -> asyncio.Task:
-        """Create an asynchroneous task to be run with asyncio.
-        """
-        pass
-
-
-class PythonExecutor(Executor):
-    """ Python exector for python functions
-    
-    Inteded to be a light wrapper to present an async interface to a synchroneous python function.
-    """
-
-    def __init__(self):
-        pass
-    
-    def __call__(self,func,*args,**kwds) -> asyncio.Task:
-            async def run_python_func(func,*args,**kwds):
-
-                return func(*args,**kwds)
-            
-            return asyncio.create_task( run_python_func(func,*args,**kwds) )
+import asyncio
+from py_wf.executor.executor import Executor
 
 class ShellExecutor(Executor):
 
@@ -67,11 +35,5 @@ class ShellExecutor(Executor):
         
         return asyncio.create_task( run_script(script) )
 
-    
-
-        
-        
-
-    
 
 

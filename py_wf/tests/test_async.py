@@ -1,7 +1,7 @@
 import asyncio
 import timeit
 
-from py_wf.executor import ShellExecutor
+from py_wf.executor.shell import ShellExecutor
 from py_wf.monitor import Monitor
 from py_wf.node import Node
 from py_wf.task import Task,State

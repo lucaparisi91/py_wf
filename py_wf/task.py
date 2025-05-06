@@ -2,7 +2,7 @@ from pathlib import Path
 import os
 from termcolor import colored
 from enum import Enum
-from py_wf.executor import Executor
+from py_wf.executor.executor import Executor
 
 class State(Enum):
         COMPLETED = 0
