@@ -85,7 +85,7 @@ class SlurmExecutor(Executor):
     
 
     def _get_state(self, job_id : int ) -> SlurmState :
-
+        
         """ Return the slurm state given its jobid
         """
         check_job_state=f"sacct --parsable -j {job_id} --format=State | cut -d '|' -f1 | sed -n 2p"

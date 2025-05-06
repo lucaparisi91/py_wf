@@ -9,22 +9,20 @@ class State(Enum):
         FAILED = 1
         SUBMITTED = 2
 
-
 class Task:
     
-    def __init__(self,operator,executor: Executor,resources={},work_dir: str = "."):
-        self.operator=operator
+    def __init__(self,*args,executor: Executor,**kwds):
+        self.args=args
+        self.kwds=kwds
         self.executor=executor
-        self.resources=resources
         self.executor=executor
-        self.work_dir=work_dir
         self.state= None
 
     async def __call__(self) :
         
         try:
             self.state=State.SUBMITTED
-            self.output = await self.executor(self.operator)
+            self.output = await self.executor(*self.args,**self.kwds)
         except Exception as e:
             print( colored( f"Error in submitting jobs: {str(e)} ","red") )
             self.state=State.FAILED

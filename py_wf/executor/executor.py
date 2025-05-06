@@ -9,7 +9,7 @@ class Executor(ABC):
 
     An executor is a callable. When invoked, possibly with parameters, it is responsponsible to create an asynchroneous tasks that takes cares to submit to a scheduler ( i.e. slurm, current python session, bash etc..) and returns once the task is completed.
     """
-
+    
     @abstractmethod
     def __call__(self, *args,**kwds) -> asyncio.Task:
         """Create an asynchroneous task to be run with asyncio.
