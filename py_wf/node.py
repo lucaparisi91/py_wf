@@ -1,14 +1,15 @@
-from enum import Enum
 from collections import deque
 import asyncio
 from py_wf.task import State
 
 
 class Node:
-    __used__names=set()
+    __used__names = set()
 
-    def __init__(self,name: str,task: object, dependencies= []) -> None:
-        """ A node in a graph. Represents the node itself and the dependency tree for this node.
+    def __init__(self, name: str, task: object, dependencies=[]) -> None:
+        """A node in a graph.
+
+        Represents the node itself and the dependency tree for this node.
 
         Args:
             name:
@@ -16,99 +17,102 @@ class Node:
             task:
                 A task to execute. Needs to provide the __call__ method
             dependencies:
-                A list of nodes that need to be executed before this node can be executed.
+                A list of nodes that need to be executed before this node
+                can be executed.
 
         """
-        
-        self.task=task
-        self.name=name
+
+        self.task = task
+        self.name = name
 
         if name in Node.__used__names:
-            raise ValueError(f"Node names needs to unique. Name {name} has alreaddy been used.")
+            raise ValueError(
+                f"""Node names needs to unique.
+                    Name {name} has alreaddy been used."""
+            )
         else:
             Node.__used__names.add(name)
 
-        self.__dependencies=[]
+        self.__dependencies = []
 
         self.addDependencies(dependencies)
-    
+
     @property
     def state(self) -> State:
         return self.task.state
 
     @property
     def dependencies(self):
-        """The number of direct dependencies of this node
-        """
+        """The number of direct dependencies of this node"""
         return self.__dependencies
 
-    def addDependencies(self,nodes ):
-        """Add a list of nodes as dependnecies
-        """
+    def addDependencies(self, nodes):
+        """Add a list of nodes as dependnecies"""
 
         for node in nodes:
             self.__dependencies.append(node)
-    
 
     def __len__(self):
-        """ Return the number of nodes in this graph.
-        """
-        i= 0
+        """Return the number of nodes in this graph."""
+        i = 0
         for node in self:
-              i+=1
+            i += 1
         return i
+
     def __call__(self):
-        asyncio.run( self._run_async() )
-    
+        asyncio.run(self._run_async())
+
     def __del__(self):
-        if self.name in  Node.__used__names:
+        if self.name in Node.__used__names:
             Node.__used__names.remove(self.name)
 
+    async def _run_async(self):
+        """Run all the tasks in the graph.
 
-    async def _run_async(self) :
-        """Run all the tasks in the graph. Dependencies are run before this node is needed.
+        Dependencies are run before this node is needed.
         """
 
         # If nothing to do return self
         if self.state == State.FAILED or self.state == State.COMPLETED:
             return self
-        
 
-        results=await asyncio.gather( *[dep._run_async() for dep in self.dependencies] )
-        if any( [result.state != State.COMPLETED for result in results]  ):
-            self.state=State.FAILED
+        results = await asyncio.gather(
+            *[dep._run_async() for dep in self.dependencies]
+            )
+        if any([result.state != State.COMPLETED for result in results]):
+            self.state = State.FAILED
             return self
 
         await self.task()
 
         return self
-    
+
     def __repr__(self) -> str:
         return f"<Node name='{self.name}' state={self.state} task={self.task}>"
-    
+
     def __iter__(self):
         return NodeIterator(self)
 
 
 class NodeIterator:
-    """Node Iterator. Uses Breath First Search to iterate overal all the dependencies in a tree.
+    """Node Iterator.
+
+    Uses Breath First Search to iterate overal all the dependencies in a tree.
     """
 
-    def __init__(self,node) -> None:
+    def __init__(self, node) -> None:
         self.__de = deque()
         self.__de.append(node)
-        self.__visited=set(node.name)
+        self.__visited = set(node.name)
 
-    def __next__( self ) -> Node :
-        
-        if len(self.__de)==0:
+    def __next__(self) -> Node:
+
+        if len(self.__de) == 0:
             raise StopIteration
 
-        node = self.__de.popleft()        
-        #print(self.__visited)
-
+        node = self.__de.popleft()
         for dep in node.dependencies:
             if dep.name not in self.__visited:
-                    self.__visited.add(dep.name)
-                    self.__de.append(dep)
+                self.__visited.add(dep.name)
+                self.__de.append(dep)
         return node
