@@ -2,9 +2,27 @@ from collections import deque
 import asyncio
 from py_wf.task import State
 
-
 class Node:
     __used__names = set()
+
+    @classmethod
+    def get_available_name(cls,name:str) -> str:
+        """ Registers a new new unique name for a node
+
+        Args:
+            name:
+                The propose new name for a node.
+        Returns:
+            A valid class name not yet in use
+        """
+
+        new_name=name
+        i=0
+        while new_name in cls.__used__names:
+            new_name=name + f"{i}" 
+            i+=1
+        
+        return new_name
 
     def __init__(self, name: str, task: object, dependencies=[]) -> None:
         """A node in a graph.
@@ -116,3 +134,15 @@ class NodeIterator:
                 self.__visited.add(dep.name)
                 self.__de.append(dep)
         return node
+
+
+def node(task_create):
+    """ Node creation decorator
+    """
+    name=task_create.__name__
+    
+    def node_create():
+        task=task_create()
+        return Node(Node.get_available_name(name),task)
+
+    return node_create

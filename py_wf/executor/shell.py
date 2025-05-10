@@ -9,7 +9,7 @@ class ShellExecutor(Executor):
         self.maxProcesses = maxProcesses
         self._nProcess = 0
         self.pollingTime = 1
-
+    
     def __call__(self, script: str) -> asyncio.Task:
         full_script = self.preScript + "\n" + script
 

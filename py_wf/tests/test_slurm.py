@@ -9,7 +9,7 @@ def test_slurm_executor():
         default_resources={
             "nodes": 1,
             "cpus-per-task": 1,
-            "qos": "standard",
+            "qos": "short",
             "partition": "standard",
             "time": "00:20:00",
             "account": "n02-NGARCH",
@@ -33,15 +33,15 @@ def test_slurm_executor_task():
         default_resources={
             "nodes": 1,
             "cpus-per-task": 1,
-            "qos": "standard",
+            "qos": "short",
             "partition": "standard",
             "time": "00:20:00",
             "account": "n02-NGARCH",
         }
     )
 
-    task = Task("echo Hello!",
-                esources={"output": "hello2.out"}, executor=executor)
+    task = Task(lambda: "echo Hello!",
+                executor_flags={"resources" : {"output": "hello2.out"} }, executor=executor)
 
     asyncio.run(task())
 
