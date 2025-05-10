@@ -53,9 +53,8 @@ class SlurmExecutor(Executor):
         self.default_resources = default_resources
 
     def __call__(
-                    self, script: str, work_dir: Path = Path("."),
-                    name="py_wf_job", resources={}
-                ) -> asyncio.Task:
+        self, script: str, work_dir: Path = Path("."), name="py_wf_job", resources={}
+    ) -> asyncio.Task:
 
         work_dir = os.path.abspath(work_dir)
 
@@ -69,9 +68,7 @@ class SlurmExecutor(Executor):
             slurm_options.update(resources)
 
             # Generate a tempory batch script file
-            batch_script = self._generate_batch_script(script,
-                                                       slurm_options, work_dir
-                                                       )
+            batch_script = self._generate_batch_script(script, slurm_options, work_dir)
             script_file_name = os.path.join(work_dir, "submit.sh")
             with open(script_file_name, "w+") as f:
                 f.write(batch_script)
@@ -98,8 +95,8 @@ class SlurmExecutor(Executor):
         """Return the slurm state given its jobid"""
 
         check_job_state = (
-            (f"sacct --parsable -j {job_id} "
-             "--format=State | cut -d '|' -f1 | sed -n 2p")
+            f"sacct --parsable -j {job_id} "
+            "--format=State | cut -d '|' -f1 | sed -n 2p"
         )
         state_output = subprocess.check_output(["sh", "-c", check_job_state])
         slurm_state_str = state_output.decode("utf-8").strip()

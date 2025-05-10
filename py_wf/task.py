@@ -1,9 +1,9 @@
-from typing import Any
 from termcolor import colored
 from enum import Enum
 from py_wf.executor.executor import Executor
 from py_wf.executor.python import PythonExecutor
 from functools import wraps
+
 
 class State(Enum):
     COMPLETED = 0
@@ -13,19 +13,20 @@ class State(Enum):
 
 class Task:
 
-    def __init__(self, operator, executor: Executor,executor_flags={}):
-        
-        self.operator = operator
+    def __init__(self, *args, executor: Executor, **kwds):
+
+        self.args = args
+        self.kwds = kwds
         self.executor = executor
         self.state = None
 
-        self.executor_flags= executor_flags
-        
-    async def __call__(self,*args,**kwds):
-        
+    async def __call__(self, *extra_args, **extra_kwds):
+
         try:
             self.state = State.SUBMITTED
-            self.output = await self.executor( self.operator(*args,**kwds) , **self.executor_flags )
+            self.output = await self.executor(
+                *self.args, *extra_args, **self.kwds, **extra_kwds
+            )
         except Exception as e:
             print(colored(f"Error in submitting jobs: {str(e)} ", "red"))
             self.state = State.FAILED
@@ -40,10 +41,11 @@ class Task:
                     resources={repr(self.resources)}>
                 """
 
+
 def python_task(func):
-    
+
     @wraps(func)
     def create_task():
-        return Task(func,executor=PythonExecutor() )
+        return Task(func, executor=PythonExecutor())
 
     return create_task

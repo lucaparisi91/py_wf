@@ -40,8 +40,7 @@ def test_slurm_executor_task():
         }
     )
 
-    task = Task(lambda: "echo Hello!",
-                executor_flags={"resources" : {"output": "hello2.out"} }, executor=executor)
+    task = Task("echo Hello!", resources={"output": "hello2.out"}, executor=executor)
 
     asyncio.run(task())
 

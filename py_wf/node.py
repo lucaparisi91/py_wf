@@ -1,13 +1,15 @@
 from collections import deque
 import asyncio
 from py_wf.task import State
+import copy
+
 
 class Node:
     __used__names = set()
 
     @classmethod
-    def get_available_name(cls,name:str) -> str:
-        """ Registers a new new unique name for a node
+    def get_available_name(cls, name: str) -> str:
+        """Registers a new new unique name for a node
 
         Args:
             name:
@@ -16,15 +18,15 @@ class Node:
             A valid class name not yet in use
         """
 
-        new_name=name
-        i=0
+        new_name = name
+        i = 0
         while new_name in cls.__used__names:
-            new_name=name + f"{i}" 
-            i+=1
-        
+            new_name = name + f"{i}"
+            i += 1
+
         return new_name
 
-    def __init__(self, name: str, task: object, dependencies=[]) -> None:
+    def __init__(self, name: str, task: object, dependencies=[], inputs=[]) -> None:
         """A node in a graph.
 
         Represents the node itself and the dependency tree for this node.
@@ -41,19 +43,38 @@ class Node:
         """
 
         self.task = task
-        self.name = name
+        self.__name = name
 
         if name in Node.__used__names:
             raise ValueError(
-                f"""Node names needs to unique.
-                    Name {name} has alreaddy been used."""
+                f"""Node names needs to be unique.
+                    Name {name} has already been used."""
             )
         else:
             Node.__used__names.add(name)
 
         self.__dependencies = []
 
-        self.addDependencies(dependencies)
+        self.add_dependencies(dependencies)
+        self.__set_input_nodes(inputs)
+
+    def __set_input_nodes(self, nodes):
+
+        self.__input_nodes = nodes
+        for node in nodes:
+            if node not in self.__dependencies:
+                self.add_dependencies([node])
+
+    def __eq__(self, node2) -> bool:
+        return node2.name == self.name
+
+    @property
+    def output(self):
+        return self.task.output
+
+    @property
+    def name(self):
+        return copy.copy(self.__name)
 
     @property
     def state(self) -> State:
@@ -64,7 +85,7 @@ class Node:
         """The number of direct dependencies of this node"""
         return self.__dependencies
 
-    def addDependencies(self, nodes):
+    def add_dependencies(self, nodes):
         """Add a list of nodes as dependnecies"""
 
         for node in nodes:
@@ -79,6 +100,7 @@ class Node:
 
     def __call__(self):
         asyncio.run(self._run_async())
+        return self
 
     def __del__(self):
         if self.name in Node.__used__names:
@@ -94,14 +116,13 @@ class Node:
         if self.state == State.FAILED or self.state == State.COMPLETED:
             return self
 
-        results = await asyncio.gather(
-            *[dep._run_async() for dep in self.dependencies]
-            )
+        results = await asyncio.gather(*[dep._run_async() for dep in self.dependencies])
         if any([result.state != State.COMPLETED for result in results]):
             self.state = State.FAILED
             return self
 
-        await self.task()
+        inputs = [node.task.output for node in self.__input_nodes]
+        await self.task(*inputs)
 
         return self
 
@@ -137,12 +158,13 @@ class NodeIterator:
 
 
 def node(task_create):
-    """ Node creation decorator
-    """
-    name=task_create.__name__
+    """Node creation decorator"""
     
-    def node_create():
-        task=task_create()
-        return Node(Node.get_available_name(name),task)
+    name = task_create.__name__
+
+    def node_create(*inputs):
+        task = task_create()
+        new_node = Node(Node.get_available_name(name), task, inputs=inputs)
+        return new_node
 
     return node_create

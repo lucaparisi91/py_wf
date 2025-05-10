@@ -7,7 +7,7 @@ import asyncio
 
 def test_run_async():
     executor = ShellExecutor()
-    task = Task( lambda : "sleep 1 ;echo Hello!", executor=executor)
+    task = Task("sleep 1 ;echo Hello!", executor=executor)
 
     asyncio.run(task())
 
@@ -18,7 +18,7 @@ def test_run_async():
 
 def test_run_fail():
     executor = ShellExecutor()
-    task = Task(lambda: "sleep(10)", executor=executor)
+    task = Task("sleep(10)", executor=executor)
 
     asyncio.run(task())
 
@@ -32,8 +32,8 @@ def test_python_executor():
     def hello():
         return "Hello"
 
-    task = Task( lambda : hello, executor=executor)
-    
+    task = Task(hello, executor=executor)
+
     asyncio.run(task())
 
     assert task.output == "Hello"

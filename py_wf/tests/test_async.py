@@ -45,15 +45,15 @@ def test_shell_executor_async():
 
 
 def test_shell_executor_node_dependencies():
-    
+
     exec = ShellExecutor()
     dependencies = [
-        Node(f"hello{i}", task=Task(lambda : f"echo Hello{1}! ", executor=exec))
+        Node(f"hello{i}", task=Task(f"echo Hello{1}! ", executor=exec))
         for i in range(10)
     ]
     node1 = Node(
         "trigger",
-        task=Task(lambda : "echo Trigger! ", executor=exec),
+        task=Task("echo Trigger! ", executor=exec),
         dependencies=dependencies,
     )
 

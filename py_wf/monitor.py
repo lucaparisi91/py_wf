@@ -27,9 +27,7 @@ class Monitor:
         self._enabled = False
 
     def __call__(self) -> asyncio.Task:
-        """Create an asynchroneous task responsible for monitoring
-
-        """
+        """Create an asynchroneous task responsible for monitoring"""
         return asyncio.create_task(self._monitor())
 
     async def _monitor(self):
@@ -39,9 +37,11 @@ class Monitor:
                 print(f"{self.name}> Start monitoring")
                 self._running = True
             print(
-                (f"\r{self.name}> Processes: "
-                 f"{self.executor._nProcess}/"
-                 f"{self.executor.maxProcesses}"),
+                (
+                    f"\r{self.name}> Processes: "
+                    f"{self.executor._nProcess}/"
+                    f"{self.executor.maxProcesses}"
+                ),
                 end="\r",
             )
             await asyncio.sleep(self.pollingTime)

@@ -9,7 +9,7 @@ class ShellExecutor(Executor):
         self.maxProcesses = maxProcesses
         self._nProcess = 0
         self.pollingTime = 1
-    
+
     def __call__(self, script: str) -> asyncio.Task:
         full_script = self.preScript + "\n" + script
 
@@ -31,12 +31,13 @@ class ShellExecutor(Executor):
             self._nProcess -= 1
 
             if proc.returncode != 0:
-                raise Exception(f"""Script failed to run.
-                                   Exit code: {proc.returncode}""")
+                raise Exception(
+                    f"""Script failed to run.
+                                   Exit code: {proc.returncode}"""
+                )
 
             return [
-                result.decode("utf-8").strip()
-                if (result is not None) else None
+                result.decode("utf-8").strip() if (result is not None) else None
                 for result in results
             ]
 

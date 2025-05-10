@@ -7,8 +7,10 @@
 
 source env.sh
 pytest -vvv --capture=tee-sys py_wf/tests/
-
+flake8 --max-line-length=88  py_wf/
 ```
+
+You can use black to format the source code, so that is passed the flake8 checks.
 
 ## Workflow manager Design
 
