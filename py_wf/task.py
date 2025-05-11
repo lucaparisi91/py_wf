@@ -1,8 +1,6 @@
 from termcolor import colored
 from enum import Enum
 from py_wf.executor.executor import Executor
-from py_wf.executor.python import PythonExecutor
-from functools import wraps
 
 
 class State(Enum):
@@ -40,12 +38,3 @@ class Task:
                     executor={ repr(self.executor)},
                     resources={repr(self.resources)}>
                 """
-
-
-def python_task(func):
-
-    @wraps(func)
-    def create_task():
-        return Task(func, executor=PythonExecutor())
-
-    return create_task

@@ -159,7 +159,7 @@ class NodeIterator:
 
 def node(task_create):
     """Node creation decorator"""
-    
+
     name = task_create.__name__
 
     def node_create(*inputs):
